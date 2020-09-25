@@ -1,0 +1,19 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+# Part A
+Plasma inorganic phosphate measurements obtained from 13 control and 20 obese patients 0, 0.5, 1, 1.5, 2, and 3 hours after an oral glucose challenge. The investigators intend to test the following hypotheses using Hotelling’s T2 statistic:
+
+(a) To test the null hypothesis that the group means are the same at all six measurement times. $H_0: \mu_1 = \mu_2$
+
+
+
+
