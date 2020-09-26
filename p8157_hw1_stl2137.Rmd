@@ -12,8 +12,91 @@ library(tidyverse)
 # Part A
 Plasma inorganic phosphate measurements obtained from 13 control and 20 obese patients 0, 0.5, 1, 1.5, 2, and 3 hours after an oral glucose challenge. The investigators intend to test the following hypotheses using Hotelling’s T2 statistic:
 
-(a) To test the null hypothesis that the group means are the same at all six measurement times. $H_0: \mu_1 = \mu_2$
+```{r, echo= FALSE, include = FALSE}
+### Read in data
+
+zerb_dat <- read_delim("/Users/SabrinaLin/Documents/Fall_2020_Longitudinal/HW1/p8157_hw1/ZERBE2.DAT", delim = " ", col_names = FALSE) %>% drop_na()
+```
 
 
+(a) To test the null hypothesis that the group means are the same at all six measurement times. 
 
+$H_0: \mu_{control} = \mu_{obese}$
 
+Matrix A
+```{r}
+matrix(c(-1, 1), nrow = 1, ncol = 2)
+```
+
+Matrix C
+```{r}
+diag(6)
+```
+
+(b) To test whether the profiles in the two groups are parallel.
+
+$H_0: \mu_{26} - \mu_{25} = \mu_{16} - \mu_{15} ;  \mu_{25} - \mu_{24} = \mu_{15} - \mu_{14} ; \mu_{24} - \mu_{23} = \mu_{14} - \mu_{13} ; \mu_{23} - \mu_{22} = \mu_{13} - \mu_{12} ; \mu_{22} - \mu_{21} = \mu_{12} - \mu_{11}$
+Matrix A
+```{r}
+matrix(c(-1, 1), nrow = 1, ncol = 2)
+```
+
+Matrix C
+```{r}
+rbind(c(-1, 0, 0, 0, 0), c(1, -1, 0, 0, 0), c(0, 1, -1, 0, 0), c(0, 0, 1, -1, 0), c(0, 0, 0, 1, -1), c(0, 0, 0, 0, 1))
+```
+
+(c) To test whether the differences in means at 2 and 3 hours after an oral glucose challenge are different between the control and obese patients.
+
+$H_0: \mu_{26} - \mu_{25} = \mu_{16} - \mu_{15} $
+
+Matrix A
+
+```{r}
+matrix(c(-1, 1), nrow = 1, ncol = 2)
+```
+
+Matrix C
+
+```{r}
+matrix(c(0, 0, 0, 0, 1, -1, nrow = 1, ncol = 6))
+```
+
+# Part B
+
+Perform Exploratory Data Analysis (EDA), to get insights into the data to eventually perform an appropriate longitudinal data analysis.
+
+These data (TLC.dat) consist of subject id, assignment to chelation treatment with succimer or placebo and four repeated measurements of blood lead levels obtained at baseline (or week 0), week 1, week 4, and week 6 on 100 children who were randomly assigned to chelation treatment with succimer or placebo.
+
+* Spaghetti plot by treatment group
+```{r}
+## read in data
+
+tlc_dat <- read_delim("/Users/SabrinaLin/Documents/Fall_2020_Longitudinal/HW1/p8157_hw1/TLC.dat", delim = " ", col_names = FALSE) %>% 
+  rename(
+    subject_id = X1,
+    treat_assign = X2,
+    week_0 = X3,
+    week_1 = X4,
+    week_4 = X5,
+    week_6 = X6
+  )
+
+tlc_dat_long <- tlc_dat %>% pivot_longer(
+  cols = starts_with("week"),
+  names_to = "week",
+  names_prefix = "week_",
+  values_to = "timepoint"
+) %>% mutate(
+  week = as.numeric(week),
+  timepoint = as.numeric(timepoint)
+)
+
+tlc_dat_long %>% 
+  group_by(subject_id) %>% 
+  ggplot(
+    aes(x = week, y = timepoint, col = treat_assign, group = subject_id
+  )) + geom_line()
+```
+
+Treatment group A (the active group) appears to have a downward trend from baseline to week 1, especially when compared to Treatment group B (the placebo group) 
