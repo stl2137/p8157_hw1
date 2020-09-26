@@ -68,7 +68,6 @@ Perform Exploratory Data Analysis (EDA), to get insights into the data to eventu
 
 These data (TLC.dat) consist of subject id, assignment to chelation treatment with succimer or placebo and four repeated measurements of blood lead levels obtained at baseline (or week 0), week 1, week 4, and week 6 on 100 children who were randomly assigned to chelation treatment with succimer or placebo.
 
-* Spaghetti plot by treatment group
 ```{r}
 ## read in data
 
@@ -82,6 +81,7 @@ tlc_dat <- read_delim("/Users/SabrinaLin/Documents/Fall_2020_Longitudinal/HW1/p8
     week_6 = X6
   )
 
+# Making data long for EDA purposes
 tlc_dat_long <- tlc_dat %>% pivot_longer(
   cols = starts_with("week"),
   names_to = "week",
@@ -91,7 +91,11 @@ tlc_dat_long <- tlc_dat %>% pivot_longer(
   week = as.numeric(week),
   timepoint = as.numeric(timepoint)
 )
+```
 
+* Individual subject spaghetti plot by treatment group: Treatment group A (the active group) appears to have a downward trend for blood lead levels from baseline to week 1, especially when compared to treatment group P (the placebo group) where blood lead levels appear to be fairly constant throughout the study period. However, there also appears to be an upward trend in treatment group A between week 4 and week 6. This is further confirmed by the smoothed line graph. 
+
+```{r}
 tlc_dat_long %>% 
   group_by(subject_id) %>% 
   ggplot(
@@ -99,4 +103,26 @@ tlc_dat_long %>%
   )) + geom_line()
 ```
 
-Treatment group A (the active group) appears to have a downward trend from baseline to week 1, especially when compared to Treatment group B (the placebo group) 
+```{r}
+tlc_dat_long %>% 
+  group_by(subject_id) %>% 
+  ggplot(
+    aes(x = week, y = timepoint, col = treat_assign, group = treat_assign
+  )) + 
+  geom_smooth()
+```
+
+* Boxplots by Weeks/Timepoints Grouped by Treatment Group: The trend noted in the individual subject spaghetti plot is further enforced by the boxplots. That being said, the variance between different recorded weeks for the placebo group appears to be less than the variance between difference recorded weeks for the treatment group. 
+
+```{r}
+tlc_dat_long %>% 
+  mutate(
+    week = as.factor(week)
+  ) %>% 
+  ggplot(
+    aes(x = week, y = timepoint, fill = treat_assign, alpha = 0.3)
+  ) + geom_boxplot()
+```
+
+
+
