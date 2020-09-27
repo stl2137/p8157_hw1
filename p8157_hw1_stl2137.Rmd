@@ -1,25 +1,22 @@
 ---
-title: "Untitled"
+title: "P8157 HW 1"
+author: Sabrina Lin stl2137
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
 library(tidyverse)
+library(Hotelling)
 ```
 
 
 # Part A
 Plasma inorganic phosphate measurements obtained from 13 control and 20 obese patients 0, 0.5, 1, 1.5, 2, and 3 hours after an oral glucose challenge. The investigators intend to test the following hypotheses using Hotelling’s T2 statistic:
 
-```{r, echo= FALSE, include = FALSE}
-### Read in data
+## (a) 
 
-zerb_dat <- read_delim("/Users/SabrinaLin/Documents/Fall_2020_Longitudinal/HW1/p8157_hw1/ZERBE2.DAT", delim = " ", col_names = FALSE) %>% drop_na()
-```
-
-
-(a) To test the null hypothesis that the group means are the same at all six measurement times. 
+To test the null hypothesis that the group means are the same at all six measurement times. 
 
 $H_0: \mu_{control} = \mu_{obese}$
 
@@ -33,9 +30,12 @@ Matrix C
 diag(6)
 ```
 
-(b) To test whether the profiles in the two groups are parallel.
+## (b) 
+
+To test whether the profiles in the two groups are parallel.
 
 $H_0: \mu_{26} - \mu_{25} = \mu_{16} - \mu_{15} ;  \mu_{25} - \mu_{24} = \mu_{15} - \mu_{14} ; \mu_{24} - \mu_{23} = \mu_{14} - \mu_{13} ; \mu_{23} - \mu_{22} = \mu_{13} - \mu_{12} ; \mu_{22} - \mu_{21} = \mu_{12} - \mu_{11}$
+
 Matrix A
 ```{r}
 matrix(c(-1, 1), nrow = 1, ncol = 2)
@@ -46,9 +46,11 @@ Matrix C
 rbind(c(-1, 0, 0, 0, 0), c(1, -1, 0, 0, 0), c(0, 1, -1, 0, 0), c(0, 0, 1, -1, 0), c(0, 0, 0, 1, -1), c(0, 0, 0, 0, 1))
 ```
 
-(c) To test whether the differences in means at 2 and 3 hours after an oral glucose challenge are different between the control and obese patients.
+## (c) 
 
-$H_0: \mu_{26} - \mu_{25} = \mu_{16} - \mu_{15} $
+To test whether the differences in means at 2 and 3 hours after an oral glucose challenge are different between the control and obese patients.
+
+$H_0: \mu_{26} - \mu_{25} = \mu_{16} - \mu_{15}$
 
 Matrix A
 
@@ -59,16 +61,16 @@ matrix(c(-1, 1), nrow = 1, ncol = 2)
 Matrix C
 
 ```{r}
-matrix(c(0, 0, 0, 0, 1, -1, nrow = 1, ncol = 6))
+matrix(c(0, 0, 0, 0, 1, -1), nrow = 1, ncol = 6)
 ```
 
 # Part B
 
+## 1.
+
 Perform Exploratory Data Analysis (EDA), to get insights into the data to eventually perform an appropriate longitudinal data analysis.
 
-These data (TLC.dat) consist of subject id, assignment to chelation treatment with succimer or placebo and four repeated measurements of blood lead levels obtained at baseline (or week 0), week 1, week 4, and week 6 on 100 children who were randomly assigned to chelation treatment with succimer or placebo.
-
-```{r}
+```{r, echo=FALSE, include=FALSE}
 ## read in data
 
 tlc_dat <- read_delim("/Users/SabrinaLin/Documents/Fall_2020_Longitudinal/HW1/p8157_hw1/TLC.dat", delim = " ", col_names = FALSE) %>% 
@@ -95,7 +97,7 @@ tlc_dat_long <- tlc_dat %>% pivot_longer(
 
 * Individual subject spaghetti plot by treatment group: Treatment group A (the active group) appears to have a downward trend for blood lead levels from baseline to week 1, especially when compared to treatment group P (the placebo group) where blood lead levels appear to be fairly constant throughout the study period. However, there also appears to be an upward trend in treatment group A between week 4 and week 6. This is further confirmed by the smoothed line graph. 
 
-```{r}
+```{r, echo = FALSE}
 tlc_dat_long %>% 
   group_by(subject_id) %>% 
   ggplot(
@@ -103,7 +105,7 @@ tlc_dat_long %>%
   )) + geom_line()
 ```
 
-```{r}
+```{r, echo = FALSE}
 tlc_dat_long %>% 
   group_by(subject_id) %>% 
   ggplot(
@@ -114,7 +116,7 @@ tlc_dat_long %>%
 
 * Boxplots by Weeks/Timepoints Grouped by Treatment Group: The trend noted in the individual subject spaghetti plot is further enforced by the boxplots. That being said, the variance between different recorded weeks for the placebo group appears to be less than the variance between difference recorded weeks for the treatment group. 
 
-```{r}
+```{r, echo = FALSE}
 tlc_dat_long %>% 
   mutate(
     week = as.factor(week)
@@ -124,5 +126,110 @@ tlc_dat_long %>%
   ) + geom_boxplot()
 ```
 
+## 2. 
 
+### Perform EDA and provide any insights available from exploration.
 
+```{r, echo = FALSE, include=FALSE}
+### Read in data
+
+zerb_dat <- read_delim("/Users/SabrinaLin/Documents/Fall_2020_Longitudinal/HW1/p8157_hw1/ZERBE2.DAT", delim = " ", col_names = FALSE) %>% 
+  rename(
+    group = X1,
+    subject_id = X2,
+    m_0 = X3,
+    m_0.5 = X4,
+    m_1 = X5,
+    m_1.5 = X6,
+    m_2 = X7,
+    m_3 = X8
+  ) %>% 
+  drop_na()
+
+### Making data long for EDA 
+
+zerb_long_dat <- zerb_dat %>% 
+  pivot_longer(
+    cols = m_0:m_3,
+    names_to = "hours_post",
+    names_prefix = "m_",
+    values_to = "measurement"
+  ) %>% 
+  mutate(
+    new_id = group_indices(., group, subject_id)
+  )
+```
+
+* Individual Spaghetti Plot: Although not entirely informative, there appears to be an overall downward tend of plasma inorganic phosphate in the individuals from baseline to 1 hours after the oral glucose challenge.
+
+```{r, echo = FALSE}
+zerb_long_dat %>% 
+  mutate(
+    new_id = as.factor(new_id)
+  ) %>% 
+  ggplot(aes(x = hours_post, y = measurement, group = new_id, col = new_id)) +
+  geom_line()
+```
+
+* Smoothed Spaghetti Plot by Treatment Group: Based off the smoothed curves by treatment group, both treatment groups have a decreased plasma inorganic phosphate measurement from hours 0 to 1.5; however, the decreasing slope for group 1 appears steeper than the decreasing slope for group 2. In addition, treatment group 1 experiences an increase from 1.5 to 3 hours after the oral glucose challenge and treatment group 2 experiences a seemingly less increase from 2 to 3 hours. 
+
+```{r}
+zerb_long_dat %>% 
+  mutate(
+    new_id = as.factor(new_id)
+  ) %>% 
+  ggplot(aes(x = hours_post, y = measurement, group = group, col = group)) +
+  geom_smooth()
+```
+
+### Carry out the Hotelling’s T2 test to test the hypotheses proposed above.
+
+(a) To test the null hypothesis that the group means are the same at all six measurement times. 
+
+```{r}
+test1 <- hotelling.test(.~group, data = zerb_dat[,-2])
+
+test1
+```
+
+* With a p-value of `r test1$pval`, we reject the null hypothesis and conclude that the group means are not the same at all six measurement times. 
+
+(b) To test whether the profiles in the two groups are parallel.
+
+```{r}
+t_zerb_dat <- t(zerb_dat[,-c(1:2)])
+
+cmat_partb <- rbind(c(-1, 0, 0, 0, 0), c(1, -1, 0, 0, 0), c(0, 1, -1, 0, 0), c(0, 0, 1, -1, 0), c(0, 0, 0, 1, -1), c(0, 0, 0, 0, 1))
+
+partb_zerb_dat <- t(cmat_partb) %*% t_zerb_dat
+
+partb_t_zerb_dat <- t(partb_zerb_dat)
+
+partb_fin_zerb_dat <- cbind(zerb_dat[,1], partb_t_zerb_dat)
+
+test2 <- hotelling.test(.~group, data = partb_fin_zerb_dat)
+
+test2
+```
+
+* With a p-value of `r test2$pval`, we reject the null hypothesis and conclude that the two groups are not parallel. 
+
+(c) To test whether the differences in means at 2 and 3 hours after an oral glucose challenge are different between the control and obese patients.
+
+```{r}
+t_zerb <- t(zerb_dat[, -c(1:6)])
+
+cmat_partc <- matrix(c(-1, 1), nrow = 1, ncol = 2)
+
+partc_zerb_dat <- cmat_partc %*% t_zerb
+
+partc_t_zerb_dat <- t(partc_zerb_dat)
+
+partc_fin_zerb_dat <- cbind(zerb_dat[,1], partc_t_zerb_dat)
+
+test3 <- hotelling.test(.~group, data = partc_fin_zerb_dat)
+
+test3
+```
+
+* With a p-value of `r test3$pval`, we fail to reject the null hypothesis and conclude that the difference in means at hours 2 and 3 after an oral glucose challenge are not different between the control and obese patients. 
